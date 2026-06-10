@@ -13,7 +13,7 @@ async def test_websocket():
             # 1. Start Lesson
             start_lesson_msg = {
                 "type": "start_lesson",
-                "concept_id": "math-8-alg-1"
+                "concept_id": "math-8-alg"
             }
             print(f"Sending: {start_lesson_msg}")
             await websocket.send(json.dumps(start_lesson_msg))
@@ -29,7 +29,7 @@ async def test_websocket():
             # 2. Student Answer
             student_answer_msg = {
                 "type": "student_answer",
-                "concept_id": "math-8-alg-1",
+                "concept_id": "math-8-alg",
                 "answer_text": "I think we should add 5 to both sides.",
                 "correct": True
             }
