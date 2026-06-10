@@ -8,6 +8,7 @@
 4.  **TRACE & VERIFY**: Never assume code behavior. Trace execution from config to implementation and cite file/line evidence.
 5.  **ZERO-HALLUCINATION**: Instructional generation must be strictly grounded in verified curriculum RAG pipelines.
 6.  **MANDATORY UI TESTING**: Every frontend change MUST be verified using the `browser_agent`.
+7.  **EXCLUSIVE MODEL MANDATE**: The system MUST exclusively use `gemini-3.5-flash` for all LLM operations. This model choice is final and must not be altered.
 
 ---
 
