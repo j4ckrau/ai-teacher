@@ -151,32 +151,26 @@ async def websocket_endpoint(websocket: WebSocket, student_id: str):
                 manager.student_states[student_id]["lesson_plan"] = lesson_plan
                 manager.student_states[student_id]["history"] = [] # Reset history for new lesson
                 
-                # 2. Generate Initial Instruction (Streaming)
-                full_instruction = ""
-                await manager.send_personal_message({
-                    "type": "instruction_response",
-                    "concept_id": concept_id,
-                    "message": f"**Lesson Plan Initiated**\n\n{lesson_plan}\n\n---\n\n" 
-                }, student_id)
-
-                async for chunk in generate_instruction_stream(
+                # 2. Generate Initial Instruction
+                instruction = await generate_instruction(
                     student_answer="I am ready to start!",
                     concept_id=concept_id,
                     cognitive_state="focused",
                     phase=LessonPhase.INTRODUCTION,
                     lesson_plan=lesson_plan,
                     history=[]
-                ):
-                    full_instruction += chunk
-                    await manager.send_personal_message({
-                        "type": "stream_chunk",
-                        "content": chunk
-                    }, student_id)
+                )
 
                 # Append to history
                 await manager.add_to_history(student_id, "student", "I am ready to start!")
-                await manager.add_to_history(student_id, "teacher", full_instruction)
+                await manager.add_to_history(student_id, "teacher", instruction)
 
+                # Send combined response (Plan + Intro)
+                await manager.send_personal_message({
+                    "type": "instruction_response",
+                    "concept_id": concept_id,
+                    "message": f"**Lesson Plan Initiated**\n\n{lesson_plan}\n\n---\n\n{instruction}" 
+                }, student_id)
                 await manager.send_personal_message({"type": "stream_complete"}, student_id)
 
             elif message.get("type") == "student_answer":
@@ -206,28 +200,28 @@ async def websocket_endpoint(websocket: WebSocket, student_id: str):
                 
                 await manager.update_phase(student_id, next_phase)
                 
-                # 3. Generate Instruction (Streaming)
-                logger.info(f"Generating streaming LLM response for {student_id} on {concept_id} (Phase: {next_phase})")
+                # 3. Generate Instruction
+                logger.info(f"Generating full LLM response for {student_id} on {concept_id} (Phase: {next_phase})")
                 cognitive_state = message.get("cognitive_state", "focused")
                 
-                full_instruction = ""
-                async for chunk in generate_instruction_stream(
+                instruction = await generate_instruction(
                     student_answer=student_answer,
                     concept_id=concept_id,
                     cognitive_state=cognitive_state,
                     phase=next_phase,
                     lesson_plan=lesson_plan,
                     history=history
-                ):
-                    full_instruction += chunk
-                    await manager.send_personal_message({
-                        "type": "stream_chunk",
-                        "content": chunk
-                    }, student_id)
+                )
 
                 # Update history
                 await manager.add_to_history(student_id, "student", student_answer)
-                await manager.add_to_history(student_id, "teacher", full_instruction)
+                await manager.add_to_history(student_id, "teacher", instruction)
+
+                await manager.send_personal_message({
+                    "type": "instruction_response",
+                    "concept_id": concept_id,
+                    "message": instruction 
+                }, student_id)
                 
                 await manager.send_personal_message({
                     "type": "stream_complete",

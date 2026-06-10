@@ -47,18 +47,6 @@ export const useTuringSocket = (studentId: string) => {
           timestamp: Date.now(),
         };
         setChatHistory((prev) => [...prev, aiMessage]);
-      } else if (data.type === 'stream_chunk') {
-        setChatHistory((prev) => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage && lastMessage.sender === 'ai') {
-            const updatedMessage = {
-              ...lastMessage,
-              message: (lastMessage.message || '') + data.content,
-            };
-            return [...prev.slice(0, -1), updatedMessage];
-          }
-          return prev;
-        });
       } else if (data.type === 'system_intervention') {
         setSystemAlert({
           action: data.action,
