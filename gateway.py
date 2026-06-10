@@ -181,8 +181,13 @@ async def websocket_endpoint(websocket: WebSocket, student_id: str):
                 lesson_plan = current_state.get("lesson_plan", "")
                 history = current_state.get("history", [])
                 
-                # 1. Update Mastery
-                correct = message.get("correct", True)
+                # 1. Update Mastery (Heuristic Correctness if not provided)
+                # Default to False if the student is asking for help
+                is_asking_help = any(word in student_answer.lower() for word in ["don't know", "dont know", "help", "what", "how"])
+                correct = message.get("correct")
+                if correct is None:
+                    correct = not is_asking_help
+                
                 assessor_payload = {
                     "student_id": student_id,
                     "concept_id": concept_id,
@@ -193,7 +198,8 @@ async def websocket_endpoint(websocket: WebSocket, student_id: str):
                 
                 # 2. Logic to advance phase
                 next_phase = current_phase
-                if correct:
+                # Only advance if correct and NOT just starting
+                if correct and student_answer.lower() not in ["i am ready to start!", "start", "ready"]:
                     if current_phase == LessonPhase.INTRODUCTION: next_phase = LessonPhase.INSTRUCTION
                     elif current_phase == LessonPhase.INSTRUCTION: next_phase = LessonPhase.GUIDED_PRACTICE
                     elif current_phase == LessonPhase.GUIDED_PRACTICE: next_phase = LessonPhase.SUMMATIVE_ASSESSMENT
