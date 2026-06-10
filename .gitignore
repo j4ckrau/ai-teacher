@@ -1,0 +1,25 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node/Frontend
+node_modules/
+dist/
+.eslintcache
+
+# System/IDE
+.DS_Store
+.vscode/
+.idea/
+.gemini/
